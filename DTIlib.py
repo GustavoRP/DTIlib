@@ -1,10 +1,14 @@
 
 # coding: utf-8
 
-# In[ ]:
+# evl = [evl1] [evl2] [evl3]
+# 
+# evt = [evt(1, 2, 3)] [componentes dos evt (z, y, x)] [Z] [Y] [X]
+
+# In[1]:
 
 def load_fa_evl_et(BASE_PATH):
-    import nibabel as ni
+    import nibabel as ni #pip install nibabel
     import numpy as np
 
     #-------------------------------------------------------
@@ -19,15 +23,17 @@ def load_fa_evl_et(BASE_PATH):
     V3_PATH = "%s%s" % ( BASE_PATH, '/dti_V3.nii.gz' )
     #-------------------------------------------------------
     FA = ni.load(FA_PATH).get_data()
-    print('FA Loaded')
+#     print('FA Loaded')
 
     L1 = ni.load(L1_PATH).get_data()
     L2 = ni.load(L2_PATH).get_data()
     L3 = ni.load(L3_PATH).get_data()
+#     print('EVL Loaded')
 
     V1 = ni.load(V1_PATH).get_data()
     V2 = ni.load(V2_PATH).get_data()
     V3 = ni.load(V3_PATH).get_data()
+#     print('EVT Loaded')
     #-------------------------------------------------------
     fa = np.swapaxes(FA,0,2)
 
