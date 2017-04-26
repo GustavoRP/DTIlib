@@ -15,7 +15,7 @@
 
 # In[1]:
 
-def load_fa_evl_et(BASE_PATH):
+def load_fa_evl_evt(BASE_PATH):
     import nibabel as ni #pip install nibabel
     import numpy as np
 
@@ -72,7 +72,7 @@ def load_fa_evl_et(BASE_PATH):
 
 # ### Manipulação de volumes (rotações)
 
-# In[2]:
+# In[5]:
 
 #rotaciona vetores
 def rot_vec(vec, angle = 90, axis = 'z'):
@@ -263,6 +263,74 @@ def interpola_Z(evt, evl, fa):
     evt_interpolated = np.swapaxes(aux,0,1)
     
     return evt_interpolated, evl_new, fa_interpolated
+
+
+# # DTI measurements
+
+# In[6]:
+
+#MD
+def Mean_Difusivity(evl):
+    import numpy as np
+    
+    MD = np.sum(evl,axis=0)/3
+    
+    return MD
+
+
+# # Vector field manipulation
+
+# In[2]:
+
+# Cria a imagem de um campo vetorial 2d
+def show_vector_field(y, x, step=32, maxlen=24, rescale=1, showPoints=False, color=(0,0,255), bgcolor=(255,255,255), pointsColor=(255,0,0), precision=3):
+    import numpy as np
+    # importopenCV
+    import cv2
+    
+    H, W = x.shape
+    img = np.array(bgcolor, np.uint8).reshape((1,1,3)) * np.ones((rescale*H, rescale*W, 3), np.uint8)
+    #mask_y, mask_x = np.mgrid[step/2 : H : step, step/2 : W : step]
+    mask_y, mask_x = np.mgrid[int(step/2) : int(H) : int(step), int(step/2) : int(W) : int(step)]
+#     print(mask_y.shape)
+#     print(mask_x.shape)
+    ssx = x[mask_y, mask_x]
+    ssy = y[mask_y, mask_x]
+    mag = np.sqrt(ssx**2+ssy**2)
+    magmax = np.max(mag)
+    cx = ssx / magmax
+    cy = ssy / magmax
+    dx = ssx / mag
+    dy = ssy / mag
+    dx[np.isnan(dx)] = 0
+    dy[np.isnan(dy)] = 0
+    p = 2**precision
+    pt1_x = (p*(rescale*mask_x - 0.5*maxlen*cx)).astype(int)
+    pt1_y = (p*(rescale*mask_y - 0.5*maxlen*cy)).astype(int)
+    pt2_x = (p*(rescale*mask_x + 0.5*maxlen*cx)).astype(int)
+    pt2_y = (p*(rescale*mask_y + 0.5*maxlen*cy)).astype(int)
+    pt3_x = ((pt2_x - p*maxlen*(0.2*dx-0.1*dy))).astype(int)
+    pt3_y = ((pt2_y - p*maxlen*(0.2*dy+0.1*dx))).astype(int)
+    pt4_x = ((pt2_x - p*maxlen*(0.2*dx+0.1*dy))).astype(int)
+    pt4_y = ((pt2_y - p*maxlen*(0.2*dy-0.1*dx))).astype(int)
+    for i in np.arange(mask_y.shape[0]):
+        for j in np.arange(mask_x.shape[1]):
+            cv2.line(img, (pt1_x[i,j], pt1_y[i,j]), (pt2_x[i,j], pt2_y[i,j]), color, lineType=8, shift=precision)
+            cv2.line(img, (pt2_x[i,j], pt2_y[i,j]), (pt3_x[i,j], pt3_y[i,j]), color, lineType=8, shift=precision)
+            cv2.line(img, (pt2_x[i,j], pt2_y[i,j]), (pt4_x[i,j], pt4_y[i,j]), color, lineType=8, shift=precision)
+
+    if showPoints:
+        from scipy.ndimage.measurements import minimum_position
+        mag2 = x**2+y**2
+        min_pos = minimum_position(mag2)
+        if type(min_pos) == tuple:
+            min_pos = [min_pos]
+        for i,j in min_pos:
+            cv2.circle(img, (rescale*j, rescale*i), 3, pointsColor, thickness=-1)
+
+    img = np.swapaxes(np.swapaxes(img,0,2),1,2)
+
+    return img
 
 
 # In[ ]:
